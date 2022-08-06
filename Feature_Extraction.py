@@ -23,17 +23,27 @@ class FEYAP ():
         
         doc = docx.Document(Text_path)
         result = [p.text for p in doc.paragraphs] 
-        text=result[0];
+        text=result[0]
+        NumberOfwords=text.count(' ')#total number of words in the text
         data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
         response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
         json_response = response.json()
         Table=json_response['dep_tree'].split('\n')
         
-        #Feature1: What percentage of total verbs appear in past, present, future 
+        
+        
+        #Feature1: What percentage of total verbs appear in past, present, future
+        
         presentCount = json_response['md_lattice'].count('tense=BEINONI')
         pastCount = json_response['md_lattice'].count('tense=PAST')  
         futureCount = json_response['md_lattice'].count('tense=FUTURE')
-        
+        temp=presentCount+pastCount+futureCount
+        Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
+                    'Future':futureCount/temp})
+        #******************************************************************
+        Quotation_marks= [_.start() for _ in re.finditer('"', text)]
+        t=text[Quotation_marks[0]:Quotation_marks[1]+1]
+        #******************************************************************
         Gufim=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
         Conjugation=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
         for i in range(len(Table)):
@@ -59,6 +69,14 @@ class FEYAP ():
             Conjugation['We']+=len(match_list)==3
             match_list = re.findall(r'per=3|S_PRN', Table[i], re.IGNORECASE)
             Conjugation['They']+=len(match_list)==2
-        return (Gufim,Conjugation)
+            
+        temp=sum(Gufim.values())
+        for id in Gufim:
+            Gufim[id]=Gufim[id]/temp
+        temp=sum(Conjugation.values())
+        for id in Conjugation:
+            Conjugation[id]=Conjugation[id]/temp
+        
+        return (Tense,Gufim,Conjugation)
             
 
