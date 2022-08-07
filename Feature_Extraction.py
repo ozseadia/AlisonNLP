@@ -4,23 +4,29 @@ Created on Fri Aug  5 17:31:42 2022
 
 @author: OzSea
 """
-
+import time
 import numpy as np 
 import requests
 import json
 import docx
 import re
 import subprocess
+import threading
 
 class FEYAP ():
     def __init__(self):
-        subprocess.run(['C://Users//OzSea//yapproj//src//yap//yap','api'])
+        self.p=subprocess.Popen(['C://Users//OzSea//yapproj//src//yap//yap','api'], shell=False, stdout=subprocess.PIPE)
+        time.sleep(30)
+        #subprocess.run(['C://Users//OzSea//yapproj//src//yap//yap','api'])
         self.localhost_yap = "http://localhost:8000/yap/heb/joint"
         self.headers = {'content-type': 'application/json'}
+        # while (self.p.poll()):
+        #     time.sleep(1)
+            
         
         
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
-        
+        poll = self.p.poll()
         doc = docx.Document(Text_path)
         result = [p.text for p in doc.paragraphs] 
         text=result[0]
@@ -31,7 +37,7 @@ class FEYAP ():
         Table=json_response['dep_tree'].split('\n')
         
         
-        
+        #*********************************************************************
         #Feature1: What percentage of total verbs appear in past, present, future
         
         presentCount = json_response['md_lattice'].count('tense=BEINONI')
@@ -41,8 +47,14 @@ class FEYAP ():
         Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
                     'Future':futureCount/temp})
         #******************************************************************
+        #What percentage of words are enclosed in quotation marks (markers of dialogue)
         Quotation_marks= [_.start() for _ in re.finditer('"', text)]
-        t=text[Quotation_marks[0]:Quotation_marks[1]+1]
+        Nqm=0
+        for i in range(0,len(Quotation_marks),2):
+            t=text[Quotation_marks[i]:Quotation_marks[i+1]+1]
+            Nqm+=len(t.split(' '))
+        NWqm=Nqm/NumberOfwords
+        
         #******************************************************************
         Gufim=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
         Conjugation=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
@@ -77,6 +89,6 @@ class FEYAP ():
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
-        return (Tense,Gufim,Conjugation)
+        return (Tense,Gufim,Conjugation,NWqm)
             
 
