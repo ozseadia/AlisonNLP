@@ -94,9 +94,9 @@ class FEYAP ():
                         match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                         Gufim['They']+=len(match_list)==2
                         #print(match_list)
-                        #if len(match_list)==2:
+                        if len(match_list)==2:
                         #    print(match_list)
-                        #    print(Table[i].split('\t'))
+                            print(Table[i].split('\t'))
                         match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                         Gufim['He']+=len(match_list)==3
                         match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
