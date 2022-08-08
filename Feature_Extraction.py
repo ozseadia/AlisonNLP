@@ -37,8 +37,8 @@ class FEYAP ():
         presentCount=0
         pastCount=0
         futureCount=0
-        Gufim=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
-        Conjugation=dict({'Me':0,'YouM':0,'YouF':0,'We':0,'They':0})
+        Gufim=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
+        Conjugation=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
         
         NWqm=0
         
@@ -83,26 +83,41 @@ class FEYAP ():
                         # if len(match_list)==2:
                         #     print(Table[i].split('\t'))
                         match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
-                        Gufim['YouM']+=len(match_list)==3
+                        Gufim['YouMs']+=len(match_list)==3
                         match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
-                        Gufim['YouF']+=len(match_list)==3
+                        Gufim['YouFs']+=len(match_list)==3
+                        match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
+                        Gufim['Youp']+=len(match_list)==2
+                        
                         match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                         Gufim['We']+=len(match_list)==2
-                        match_list = re.findall(r'per=3', Table[i], re.IGNORECASE)
-                        Gufim['They']+=len(match_list)==1
-                        if len(match_list)==1:
-                             print(Table[i].split('\t'))
-                    
+                        match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
+                        Gufim['They']+=len(match_list)==2
+                        #print(match_list)
+                        #if len(match_list)==2:
+                        #    print(match_list)
+                        #    print(Table[i].split('\t'))
+                        match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
+                        Gufim['He']+=len(match_list)==3
+                        match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
+                        Gufim['She']+=len(match_list)==3
                     match_list = re.findall(r'num=S|per=1|S_PRN', Table[i], re.IGNORECASE)
                     Conjugation['Me']+=len(match_list)==3
                     match_list = re.findall(r'gen=M|num=S|per=2|S_PRN', Table[i], re.IGNORECASE)
-                    Conjugation['YouM']+=len(match_list)==4
+                    Conjugation['YouMs']+=len(match_list)==4
                     match_list = re.findall(r'gen=F|num=S|per=2|S_PRN', Table[i], re.IGNORECASE)
-                    Conjugation['YouF']+=len(match_list)==4
+                    Conjugation['YouFs']+=len(match_list)==4
+                    match_list = re.findall(r'num=P|per=2|S_PRN', Table[i], re.IGNORECASE)
+                    Conjugation['Youp']+=len(match_list)==3
                     match_list = re.findall(r'num=P|per=1|S_PRN', Table[i], re.IGNORECASE)
                     Conjugation['We']+=len(match_list)==3
                     match_list = re.findall(r'per=3|S_PRN', Table[i], re.IGNORECASE)
                     Conjugation['They']+=len(match_list)==2
+                    
+                    match_list = re.findall(r'gen=M|num=S|per=3|S_PRN', Table[i], re.IGNORECASE)
+                    Conjugation['He']+=len(match_list)==4
+                    match_list = re.findall(r'gen=F|num=S|per=3|S_PRN', Table[i], re.IGNORECASE)
+                    Conjugation['She']+=len(match_list)==4
                 
         #temp=sum(Gufim.values())
         temp=1
