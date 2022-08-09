@@ -23,10 +23,28 @@ class FEYAP ():
         # while (self.p.poll()):
         #     time.sleep(1)
             
-    def Text2sentenc(self,Text_path="101 - Atlas.docx"):
-        pass
+    def Text2sentenc(self,text):
+        data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
+        response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
+        json_response = response.json()
+        return(json_response)
     
+    def RepetWord1(self,TT):
         
+        for i in range(len(TT)):
+            TT[i]=TT[i].split('\t')
+        n=0
+        for i in range(len(TT)-1):
+            
+            if len(TT[i+1])>=3 and len(TT[i])>=3:
+                #print(i)
+                try:
+                    n+=(TT[i][2]==TT[i+1][2]) 
+                except:
+                    print(TT[i+1])
+        return(n) 
+           
+    
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
         poll = self.p.poll()
         doc = docx.Document(Text_path)
@@ -41,7 +59,7 @@ class FEYAP ():
         Conjugation=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
         
         NWqm=0
-        
+        RepeatWords=0
         #******************************************************************
         #What percentage of words are enclosed in quotation marks (markers of dialogue)
         Quotation_marks= [_.start() for _ in re.finditer('"', result[0])]
@@ -59,8 +77,9 @@ class FEYAP ():
             data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
             response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
             json_response = response.json()
+            RepeatWords+=self.RepetWord1(json_response['dep_tree'].split('\n'))
             Table=json_response['dep_tree'].split('\n')
-            
+            #print(Table)
             
             
             #*********************************************************************
@@ -74,13 +93,15 @@ class FEYAP ():
             Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
                         'Future':futureCount/temp})
             
-    
+
+            
             for i in range(len(Table)):
+                #print(type(Table[i]))
                 if not(re.findall(r'suf_per', Table[i], re.IGNORECASE)):
                     if not (re.findall(r'S_PRN', Table[i], re.IGNORECASE)):
                         match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                         Gufim['Me']+=len(match_list)==2
-                        # if len(match_list)==2:
+                        #if len(match_list)==2:
                         #     print(Table[i].split('\t'))
                         match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                         Gufim['YouMs']+=len(match_list)==3
@@ -94,9 +115,9 @@ class FEYAP ():
                         match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                         Gufim['They']+=len(match_list)==2
                         #print(match_list)
-                        if len(match_list)==2:
+                        #if len(match_list)==2:
                         #    print(match_list)
-                            print(Table[i].split('\t'))
+                        #    print(Table[i].split('\t'))
                         match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                         Gufim['He']+=len(match_list)==3
                         match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
@@ -118,8 +139,7 @@ class FEYAP ():
                     Conjugation['He']+=len(match_list)==4
                     match_list = re.findall(r'gen=F|num=S|per=3|S_PRN', Table[i], re.IGNORECASE)
                     Conjugation['She']+=len(match_list)==4
-                
-        #temp=sum(Gufim.values())
+
         temp=1
         for id in Gufim:
             Gufim[id]=Gufim[id]/temp
@@ -128,6 +148,6 @@ class FEYAP ():
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
-        return (Tense,Gufim,Conjugation,NWqm)
+        return (RepeatWords,Tense,Gufim,Conjugation,NWqm)
             
 
