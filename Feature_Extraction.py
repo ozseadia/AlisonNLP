@@ -43,11 +43,22 @@ class FEYAP ():
                 except:
                     print(TT[i+1])
         return(n) 
-           
+    
+    def RepetWord3(self,text):
+        Temp=re.sub(r'[^\w]', ' ', text) # remove all symbols from string
+        Temp = list(filter(None, Temp.split(' ')))
+        Words_List=list(set(Temp))
+        my_dict = dict.fromkeys(Words_List,0)
+        for key in my_dict:
+            my_dict[key]=(re.sub(r'[^\w]', ' ', text)).count(' '+key+' ')
+            
+        return(1)
+    
     
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
         poll = self.p.poll()
         doc = docx.Document(Text_path)
+        
         result = [p.text for p in doc.paragraphs] 
         
         NumberOfwords=result[0].count(' ')#total number of words in the text
@@ -80,6 +91,7 @@ class FEYAP ():
             RepeatWords+=self.RepetWord1(json_response['dep_tree'].split('\n'))
             Table=json_response['dep_tree'].split('\n')
             #print(Table)
+            
             
             
             #*********************************************************************
