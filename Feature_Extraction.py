@@ -48,11 +48,11 @@ class FEYAP ():
         Temp=re.sub(r'[^\w]', ' ', text) # remove all symbols from string
         Temp = list(filter(None, Temp.split(' ')))
         Words_List=list(set(Temp))
-        my_dict = dict.fromkeys(Words_List,0)
-        for key in my_dict:
-            my_dict[key]=(re.sub(r'[^\w]', ' ', text)).count(' '+key+' ')
+        words_dict = dict.fromkeys(Words_List,0)
+        for key in words_dict:
+            words_dict[key]=(re.sub(r'[^\w]', ' ', text)).count(' '+key+' ')
             
-        return(1)
+        return(words_dict)
     
     
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
@@ -60,7 +60,7 @@ class FEYAP ():
         doc = docx.Document(Text_path)
         
         result = [p.text for p in doc.paragraphs] 
-        
+        RepeatWords3=self.RepetWord3(result[0])
         NumberOfwords=result[0].count(' ')#total number of words in the text
         TEXT=result[0].split('.')
         presentCount=0
@@ -160,6 +160,6 @@ class FEYAP ():
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
-        return (RepeatWords,Tense,Gufim,Conjugation,NWqm)
+        return (RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm)
             
 
