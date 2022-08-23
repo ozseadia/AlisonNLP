@@ -54,12 +54,15 @@ class FEYAP ():
             
         return(words_dict)
     
+    def CloseYap(self):
+        self.p.terminate()
     
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
         poll = self.p.poll()
         doc = docx.Document(Text_path)
         
         result = [p.text for p in doc.paragraphs] 
+        result[0]=re.sub("\(.*?\)","",result[0])
         RepeatWords3=self.RepetWord3(result[0])
         NumberOfwords=result[0].count(' ')#total number of words in the text
         TEXT=result[0].split('.')
@@ -100,8 +103,8 @@ class FEYAP ():
             presentCount+= json_response['md_lattice'].count('tense=BEINONI')
             pastCount += json_response['md_lattice'].count('tense=PAST')  
             futureCount += json_response['md_lattice'].count('tense=FUTURE')
-            #temp=presentCount+pastCount+futureCount
-            temp=1
+            temp=presentCount+pastCount+futureCount
+            #temp=1
             Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
                         'Future':futureCount/temp})
             
@@ -152,11 +155,12 @@ class FEYAP ():
                     match_list = re.findall(r'gen=F|num=S|per=3|S_PRN', Table[i], re.IGNORECASE)
                     Conjugation['She']+=len(match_list)==4
 
-        temp=1
+        #temp=1
+        temp=sum(Gufim.values())
         for id in Gufim:
             Gufim[id]=Gufim[id]/temp
-        #temp=sum(Conjugation.values())
-        temp=1
+        temp=sum(Conjugation.values())
+        #temp=1
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
