@@ -58,7 +58,7 @@ class FEYAP ():
         self.p.terminate()
     
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
-        poll = self.p.poll()
+        
         doc = docx.Document(Text_path)
         
         result = [p.text for p in doc.paragraphs] 
