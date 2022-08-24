@@ -12,6 +12,7 @@ import docx
 import re
 import subprocess
 import threading
+from transformers import AutoTokenizer, AutoModel, pipeline
 
 class FEYAP ():
     def __init__(self):
@@ -22,6 +23,11 @@ class FEYAP ():
         self.headers = {'content-type': 'application/json'}
         # while (self.p.poll()):
         #     time.sleep(1)
+        self.sentiment_analysis = pipeline(
+	    "sentiment-analysis",
+	    model="avichr/heBERT_sentiment_analysis",
+	    tokenizer="avichr/heBERT_sentiment_analysis",
+	    return_all_scores = True)
             
     def Text2sentenc(self,text):
         data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
@@ -57,13 +63,25 @@ class FEYAP ():
     def CloseYap(self):
         self.p.terminate()
     
+    def Sentiment(self,text):
+        S=self.sentiment_analysis(text.split('.'))
+        Score=dict({'negative':0,'positive':0,'neutral':0})
+        for e in S:
+            for i in range(len(e)):
+                Score[list(e[i].values())[0]]+=list(e[i].values())[1]/len(S)
+        return(Score)
+        
+    
+    
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
         
         doc = docx.Document(Text_path)
         
         result = [p.text for p in doc.paragraphs] 
         result[0]=re.sub("\(.*?\)","",result[0])
+        result[0]=re.sub("[\[\]<>()\\/]","",result[0])
         RepeatWords3=self.RepetWord3(result[0])
+        Sentiment_Score=self.Sentiment(result[0])
         NumberOfwords=result[0].count(' ')#total number of words in the text
         TEXT=result[0].split('.')
         presentCount=0
@@ -164,6 +182,6 @@ class FEYAP ():
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
-        return (RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm)
+        return (Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm)
             
 
