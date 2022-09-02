@@ -13,6 +13,7 @@ import re
 import subprocess
 import threading
 from transformers import AutoTokenizer, AutoModel, pipeline
+import Results2Doc as RD
 
 class FEYAP ():
     def __init__(self):
@@ -76,10 +77,20 @@ class FEYAP ():
     def FE_Yap(self,Text_path="101 - Atlas.docx"):
         
         doc = docx.Document(Text_path)
+        fullText = str()
+        for para in doc.paragraphs:
+            for run in para.runs:
+                if run.font.color.rgb:
+                    print(run.font.color.rgb)
+                else:
+                    #fullText.append(run.text)
+                    fullText+=run.text
         
-        result = [p.text for p in doc.paragraphs] 
+        #result = [p.text for p in doc.paragraphs] 
+        result=[fullText]
         result[0]=re.sub("\(.*?\)","",result[0])
-        result[0]=re.sub("[\[\]<>()\\/]","",result[0])
+        result[0]=re.sub("\[.*?\]","",result[0])
+        result[0]=re.sub("[\[\]<>()\\/\#]","",result[0])
         RepeatWords3=self.RepetWord3(result[0])
         Sentiment_Score=self.Sentiment(result[0])
         NumberOfwords=result[0].count(' ')#total number of words in the text
@@ -123,7 +134,8 @@ class FEYAP ():
             futureCount += json_response['md_lattice'].count('tense=FUTURE')
             temp=presentCount+pastCount+futureCount
             #temp=1
-            Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
+            if temp>0:
+                Tense=dict({'Past':pastCount/temp,'Present':presentCount/temp,
                         'Future':futureCount/temp})
             
 
@@ -182,6 +194,7 @@ class FEYAP ():
         for id in Conjugation:
             Conjugation[id]=Conjugation[id]/temp
         
+        RD.Results(Text_path[0:-5],Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm)
         return (Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm)
             
 
