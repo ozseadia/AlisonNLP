@@ -4,7 +4,8 @@ Created on Thu Sep  1 15:42:37 2022
 
 @author: OzSea
 """
-def Results(FileName,Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm):
+def Results(FileName,Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm,
+            GufimWords,ConjugationWords):
     #Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm
     
     
@@ -26,7 +27,10 @@ def Results(FileName,Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjug
     file.write("RepeatWords1:" + str + "\n")
     str = repr(RepeatWords3)
     file.write("RepeatWords3:" + str + "\n")
-     
+    str = repr(GufimWords)
+    file.write("GufimWords:" + str + "\n")
+    str = repr(ConjugationWords)
+    file.write("ConjugationWords:" + str + "\n")
     #close file
     file.close()
 
