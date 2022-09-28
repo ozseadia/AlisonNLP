@@ -64,12 +64,31 @@ class FEYAP ():
     def CloseYap(self):
         self.p.terminate()
     
-    def Sentiment(self,text):
-        S=self.sentiment_analysis(text.split('.'))
+    def Sentiment(self,text_raw,Nwords):
+        ListSentence=text_raw.split('.')
+        subtext=list()
+        for text in ListSentence:
+            if len(text.split(' '))<=Nwords:
+                subtext.append(text)
+            else:
+                
+                R=int((len(text.split(' '))-len(text.split(' '))%Nwords)/Nwords)
+                for i in range(R+1):
+                    Sen=''
+                    if i<R:
+                        for j in range(Nwords*i,Nwords*(i+1)):
+                            Sen+=' '+text.split(' ')[j]
+                        subtext.append(Sen[1:])
+                    else:
+                        for j in range(Nwords*i,len(text.split(' '))):
+                            Sen+=' '+text.split(' ')[j]
+                        subtext.append(Sen[1:]) 
+        S=self.sentiment_analysis(subtext)   
         Score=dict({'negative':0,'positive':0,'neutral':0})
         for e in S:
             for i in range(len(e)):
                 Score[list(e[i].values())[0]]+=list(e[i].values())[1]/len(S)
+        print(subtext)        
         return(Score)
         
     def ExtractWord(self,text):
@@ -150,7 +169,7 @@ class FEYAP ():
                         Gufim['Me']+=len(match_list)==2
                         #if len(match_list)==2:GufimWords.append(Table[i])
                         #if len(match_list)==2:
-                        #     print(Table[i].split('\t'))
+                        #     print(str(Table[i].split('\t')))
                         match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                         Gufim['YouMs']+=len(match_list)==3
                         #if len(match_list)==3:GufimWords.append(Table[i])
@@ -169,7 +188,7 @@ class FEYAP ():
                         #print(match_list)
                         #if len(match_list)==2:
                         #    print(match_list)
-                        #    print(Table[i].split('\t'))
+                        #    print(str(Table[i].split('\t')))
                         match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                         Gufim['He']+=len(match_list)==3
                         #if len(match_list)==3:GufimWords.append(Table[i])
@@ -237,13 +256,14 @@ class FEYAP ():
                     #fullText.append(run.text)
                     fullText+=run.text
         
-        #result = [p.text for p in doc.paragraphs] 
+        #result = [p.text for p in doc.paragraphs]
+        Nwords=1000
         result=[fullText]
         result[0]=re.sub("\(.*?\)","",result[0])
         result[0]=re.sub("\[.*?\]","",result[0])
         result[0]=re.sub("[\[\]<>()\\/\#]","",result[0])
         RepeatWords3=self.RepetWord3(result[0])
-        Sentiment_Score=self.Sentiment(result[0])
+        Sentiment_Score=self.Sentiment(result[0],5)
         NumberOfwords=result[0].count(' ')#total number of words in the text
         TEXT=result[0].split('.')
         presentCount=0
@@ -251,11 +271,11 @@ class FEYAP ():
         futureCount=0
         Test=''
         GufimPast=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimPastWords=dict({'Me':'','YouMs':'','YouFs':'','Youp':'','We':'','They':'','He':'','She':''})
+        GufimPastWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
         GufimPresent=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimPresentWords=dict({'Me':'','YouMs':'','YouFs':'','Youp':'','We':'','They':'','He':'','She':''})
+        GufimPresentWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
         GufimFuture=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimFutureWords=dict({'Me':'','YouMs':'','YouFs':'','Youp':'','We':'','They':'','He':'','She':''})
+        GufimFutureWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
         GufimPrepositions=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
         Gufim=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
         COP=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
@@ -279,14 +299,38 @@ class FEYAP ():
         
         #******************************************************************
         TABLE=list()
+        
         for text in TEXT:
-            data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
-            response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
-            json_response = response.json()
-            RepeatWords+=self.RepetWord1(json_response['dep_tree'].split('\n'))
-            Table=json_response['dep_tree'].split('\n')
-            #print(Table)
-            TABLE.append(Table)
+            if len(text.split(' '))<=Nwords:
+                data = json.dumps({'text': "{}  ".format(text)})  # input string ends with two space characters
+                response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
+                json_response = response.json()
+                RepeatWords+=self.RepetWord1(json_response['dep_tree'].split('\n'))
+                Table=json_response['dep_tree'].split('\n')
+                #Table=json_response['md_lattice'].split('\n')
+                #print(Table)
+                TABLE.append(Table)
+            else:
+                Ta=list()
+                R=int((len(text.split(' '))-len(text.split(' '))%Nwords)/Nwords)
+                for i in range(R+1):
+                    S=''
+                    if i<R:
+                        for j in range(Nwords*i,Nwords*(i+1)):
+                            S+=' '+text.split(' ')[j]
+                        subtext=S[1:]
+                    else:
+                        for j in range(Nwords*i,len(text.split(' '))):
+                            S+=' '+text.split(' ')[j]
+                        subtext=S[1:]
+                    data = json.dumps({'text': "{}  ".format(subtext)})  # input string ends with two space characters
+                    response = requests.get(url=self.localhost_yap, data=data, headers=self.headers)
+                    json_response = response.json()
+                    RepeatWords+=self.RepetWord1(json_response['dep_tree'].split('\n'))
+                    Ta.append(json_response['dep_tree'].split('\n'))
+                #Table=[]    
+                Table = [item for sublist in Ta for item in sublist] 
+                TABLE.append(Table)
             
             
             #*********************************************************************
@@ -305,35 +349,38 @@ class FEYAP ():
             
             for i in range(len(Table)):
                 #print(type(Table[i]))
+                #print(i)
+                #Table[i]=list(filter(None,Table[i]))
+                #print(Table)
                 if (re.findall(r'tense=PAST', Table[i], re.IGNORECASE)):
                     match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                     GufimPast['Me']+=len(match_list)==2
-                    if len(match_list)==2: GufimPastWords['Me']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPastWords['Me'].append(str(Table[i].split('\t')))
                     #if len(match_list)==2: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPast['YouMs']+=len(match_list)==3
-                    if len(match_list)==3: GufimPastWords['YouMs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPastWords['YouMs'].append(str(Table[i].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPast['YouFs']+=len(match_list)==3
-                    if len(match_list)==3: GufimPastWords['YouFs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPastWords['YouFs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
                     GufimPast['Youp']+=len(match_list)==2
-                    if len(match_list)==2: GufimPastWords['Youp']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPastWords['Youp'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                     GufimPast['We']+=len(match_list)==2
-                    if len(match_list)==2: GufimPastWords['We']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPastWords['We'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                     GufimPast['They']+=len(match_list)==2
-                    if len(match_list)==2: GufimPastWords['They']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPastWords['They'].append(str(Table[i].split('\t')))
                     #if len(match_list)==2: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPast['He']+=len(match_list)==3
-                    if len(match_list)==3: GufimPastWords['He']+=' '+Table[i].split('\t')[1] 
+                    if len(match_list)==3: GufimPastWords['He'].append(str(Table[i].split('\t'))) 
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPast['She']+=len(match_list)==3
-                    if len(match_list)==3: GufimPastWords['She']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPastWords['She'].append(str(Table[i].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'per=1|per=2|per=3', Table[i], re.IGNORECASE)
                     GufimTenseWords.append(Table[i])
@@ -360,58 +407,58 @@ class FEYAP ():
                 if (re.findall(r'tense=BEINONI', Table[i], re.IGNORECASE)):
                     match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                     GufimPresent['Me']+=len(match_list)==2
-                    if len(match_list)==2: GufimPresentWords['Me']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPresentWords['Me'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPresent['YouMs']+=len(match_list)==3
-                    if len(match_list)==3: GufimPresentWords['YouMs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPresentWords['YouMs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPresent['YouFs']+=len(match_list)==3
-                    if len(match_list)==3: GufimPresentWords['YouFs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPresentWords['YouFs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
                     GufimPresent['Youp']+=len(match_list)==2
-                    if len(match_list)==2: GufimPresentWords['YouP']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPresentWords['YouP'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                     GufimPresent['We']+=len(match_list)==2
-                    if len(match_list)==2: GufimPresentWords['We']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPresentWords['We'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                     GufimPresent['They']+=len(match_list)==2
-                    if len(match_list)==2: GufimPresentWords['They']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimPresentWords['They'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPresent['He']+=len(match_list)==3
-                    if len(match_list)==3: GufimPresentWords['He']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPresentWords['He'].append(str(Table[i].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPresent['She']+=len(match_list)==3
-                    if len(match_list)==3: GufimPresentWords['She']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimPresentWords['She'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'per=1|per=2|per=3', Table[i], re.IGNORECASE)
                     GufimTenseWords.append(Table[i])    
                 if (re.findall(r'tense=FUTURE', Table[i], re.IGNORECASE)):
                     match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                     GufimFuture['Me']+=len(match_list)==2
-                    if len(match_list)==2: GufimFutureWords['Me']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimFutureWords['Me'].append(str(Table[i].split('\t')))
                     #if len(match_list)==2: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimFuture['YouMs']+=len(match_list)==3
-                    if len(match_list)==3: GufimFutureWords['YouMs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimFutureWords['YouMs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimFuture['YouFs']+=len(match_list)==3
-                    if len(match_list)==3: GufimFutureWords['YouFs']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimFutureWords['YouFs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
                     GufimFuture['Youp']+=len(match_list)==2
-                    if len(match_list)==2: GufimFutureWords['Youp']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimFutureWords['Youp'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                     GufimFuture['We']+=len(match_list)==2
-                    if len(match_list)==2: GufimFutureWords['We']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimFutureWords['We'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                     GufimFuture['They']+=len(match_list)==2
-                    if len(match_list)==2: GufimFutureWords['They']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==2: GufimFutureWords['They'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimFuture['He']+=len(match_list)==3
-                    if len(match_list)==3: GufimFutureWords['He']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimFutureWords['He'].append(str(Table[i].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimFuture['She']+=len(match_list)==3
-                    if len(match_list)==3: GufimFutureWords['She']+=' '+Table[i].split('\t')[1]
+                    if len(match_list)==3: GufimFutureWords['She'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'per=1|per=2|per=3', Table[i], re.IGNORECASE)
                     GufimTenseWords.append(Table[i])     
                     
@@ -488,5 +535,5 @@ class FEYAP ():
         CO=self.RepetWord3(Temp)
             
     #RD.Results(Text_path[0:-5],Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm,GW,CW)
-        return (GufimFutureWords,CO,COP,GufimWords,TABLE,Tense,GP,GW,GT,Gufim,GufimPrepositions,GufimPast,GufimPresent,GufimFuture)
+        return (Sentiment_Score,CO,COP,GufimWords,TABLE,Tense,GP,GW,GT,Gufim,GufimPrepositions,GufimPast,GufimPresent,GufimFuture)
  
