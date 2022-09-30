@@ -4,3 +4,4 @@ tensorflow==2.9.1
 pyplutchik==0.0.7
 torch==1.10.0
 python-docx==0.8.11
+openpyxl==3.0.10

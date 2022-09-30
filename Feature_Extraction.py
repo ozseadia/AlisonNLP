@@ -13,7 +13,9 @@ import re
 import subprocess
 import threading
 from transformers import AutoTokenizer, AutoModel, pipeline
-import Results2Doc as RD
+#import Results2Doc as RD
+import Results2excel as RD
+import openpyxl
 
 class FEYAP ():
     def __init__(self):
@@ -270,17 +272,18 @@ class FEYAP ():
         pastCount=0
         futureCount=0
         Test=''
-        GufimPast=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimPastWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
-        GufimPresent=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimPresentWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
-        GufimFuture=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        GufimFutureWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'They':[],'He':[],'She':[]})
-        GufimPrepositions=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        Gufim=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
-        COP=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'They':0,'He':0,'She':0})
+        GufimPast=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
+        GufimPastWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'He':[],'She':[],'They':[]})
+        GufimPresent=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
+        GufimPresentWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'He':[],'She':[],'They':[]})
+        GufimFuture=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
+        GufimFutureWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'He':[],'She':[],'They':[]})
+        GufimPrepositions=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
+        GufimPrepositionsWords=dict({'Me':[],'YouMs':[],'YouFs':[],'Youp':[],'We':[],'He':[],'She':[],'They':[]})
+        Gufim=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
+        COP=dict({'Me':0,'YouMs':0,'YouFs':0,'Youp':0,'We':0,'He':0,'She':0,'They':0})
         GufimTenseWords=list()
-        GufimPrepositionsWords=list()
+        #GufimPrepositionsWords=list()
         GufimWords=list()
         ConjugationWords=list()
         COPWords=list()
@@ -384,23 +387,40 @@ class FEYAP ():
                     #if len(match_list)==3: Test+=' '+Table[i]#.split('\t')[1]
                     match_list = re.findall(r'per=1|per=2|per=3', Table[i], re.IGNORECASE)
                     GufimTenseWords.append(Table[i])
-                if (re.findall(r'COP', Table[i], re.IGNORECASE)):
+                if (re.findall(r'COP', Table[i], re.IGNORECASE) and not (re.findall('אני|את|אתה|אתם|אתן|אנחנו|הם|הן|הוא|היא',
+                                                                                    Table[i], re.IGNORECASE))):
                     match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                     COP['Me']+=len(match_list)==2
+                    GufimPast['Me']+=len(match_list)==2
+                    if len(match_list)==2: GufimPastWords['Me'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                     COP['YouMs']+=len(match_list)==3
+                    GufimPast['YouMs']+=len(match_list)==3
+                    if len(match_list)==3: GufimPastWords['YouMs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
                     COP['YouFs']+=len(match_list)==3
+                    GufimPast['YouFs']+=len(match_list)==3
+                    if len(match_list)==3: GufimPastWords['YouFs'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
                     COP['Youp']+=len(match_list)==2
+                    GufimPast['Youp']+=len(match_list)==2
+                    if len(match_list)==2: GufimPastWords['Youp'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                     COP['We']+=len(match_list)==2
+                    GufimPast['We']+=len(match_list)==2
+                    if len(match_list)==2: GufimPastWords['We'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'num=P|per=3', Table[i], re.IGNORECASE)
                     COP['They']+=len(match_list)==2
+                    GufimPast['They']+=len(match_list)==2
+                    if len(match_list)==2: GufimPastWords['They'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                     COP['He']+=len(match_list)==3
+                    GufimPast['He']+=len(match_list)==3
+                    if len(match_list)==3: GufimPastWords['He'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     COP['She']+=len(match_list)==3
+                    GufimPast['She']+=len(match_list)==3
+                    if len(match_list)==3: GufimPastWords['She'].append(str(Table[i].split('\t')))
                     match_list = re.findall(r'per=1|per=2|per=3', Table[i], re.IGNORECASE)
                     COPWords.append(Table[i])
                 
@@ -467,25 +487,31 @@ class FEYAP ():
                 if (re.findall('S_PRN', Table[i], re.IGNORECASE)):
                     match_list = re.findall(r'num=S|per=1', Table[i], re.IGNORECASE)
                     GufimPrepositions['Me']+=len(match_list)==2
-                    #if len(match_list)==2: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
+                    if len(match_list)==2: GufimPrepositionsWords['Me'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPrepositions['YouMs']+=len(match_list)==3
+                    if len(match_list)==3: GufimPrepositionsWords['YouMs'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'gen=F|num=S|per=2', Table[i], re.IGNORECASE)
                     GufimPrepositions['YouFs']+=len(match_list)==3
+                    if len(match_list)==3: GufimPrepositionsWords['YouFs'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'num=P|per=2', Table[i], re.IGNORECASE)
                     GufimPrepositions['Youp']+=len(match_list)==2
+                    if len(match_list)==2: GufimPrepositionsWords['Youp'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'num=P|per=1', Table[i], re.IGNORECASE)
                     GufimPrepositions['We']+=len(match_list)==2
+                    if len(match_list)==2: GufimPrepositionsWords['We'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'per=3|num=P', Table[i], re.IGNORECASE)
                     GufimPrepositions['They']+=len(match_list)==2
-                    
+                    if len(match_list)==2: GufimPrepositionsWords['They'].append(str(Table[i-1].split('\t')))
                     match_list = re.findall(r'gen=M|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPrepositions['He']+=len(match_list)==3
+                    if len(match_list)==3: GufimPrepositionsWords['He'].append(str(Table[i-1].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     GufimPrepositions['She']+=len(match_list)==3
+                    if len(match_list)==3: GufimPrepositionsWords['She'].append(str(Table[i-1].split('\t')))
                     #if len(match_list)==3: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
-                    GufimPrepositionsWords.append(Table[i-1])
+                    #GufimPrepositionsWords.append(Table[i-1])
 
                 if ((re.findall('PRP', Table[i], re.IGNORECASE)) and 
                 (re.findall('אני|את|אתה|אתם|אתן|אנחנו|הם|הן|הוא|היא', Table[i], re.IGNORECASE))):
@@ -506,7 +532,7 @@ class FEYAP ():
                     #if len(match_list)==3: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
                     match_list = re.findall(r'gen=F|num=S|per=3', Table[i], re.IGNORECASE)
                     Gufim['She']+=len(match_list)==3
-                    if len(match_list)==3: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
+                    #if len(match_list)==3: Test+=' '+Table[i]+''+Table[i-1]#.split('\t')[1]
                     GufimWords.append(Table[i])
 
 
@@ -516,24 +542,34 @@ class FEYAP ():
             Temp+=' '
         GT=self.RepetWord3(Temp) 
         
-        Temp=str()
-        for i in range(len(GufimPrepositionsWords)):
-            Temp+=' '+GufimPrepositionsWords[i].split('\t')[1]
-            Temp+=' '
-        GP=self.RepetWord3(Temp)  
+        # Temp=str()
+        # for i in range(len(GufimPrepositionsWords)):
+        #     Temp+=' '+GufimPrepositionsWords[i].split('\t')[1]
+        #     Temp+=' '
+        # GP=self.RepetWord3(Temp)  
             
-        Temp=str()
-        for i in range(len(GufimWords)):
-            Temp+=' '+GufimWords[i].split('\t')[1]
-            Temp+=' '
-        GW=self.RepetWord3(Temp)
+        # Temp=str()
+        # for i in range(len(GufimWords)):
+        #     Temp+=' '+GufimWords[i].split('\t')[1]
+        #     Temp+=' '
+        # GW=self.RepetWord3(Temp)
         
         Temp=str()
         for i in range(len(COPWords)):
             Temp+=' '+COPWords[i].split('\t')[1]
             Temp+=' '
         CO=self.RepetWord3(Temp)
-            
+        
+        TotalTense=sum(GufimPast.values())+sum(GufimPresent.values())+sum(GufimFuture.values())
+        my_wb = openpyxl.Workbook()
+        my_wb=RD.ResulysInitial(my_wb,R=1)
+        my_wb,R0=RD.Results(my_wb,1,GufimPastWords,GufimPast,TotalTense,'Past')
+        my_wb,R0=RD.Results(my_wb,R0,GufimPresentWords,GufimPresent,TotalTense,'Present')
+        my_wb,R0=RD.Results(my_wb,R0,GufimFutureWords,GufimFuture,TotalTense,'Future')
+        my_wb,R0=RD.Results(my_wb,R0,GufimPrepositionsWords,GufimPrepositions,sum(GufimPrepositions.values()),'Preposition')
+        my_wb,R0=RD.Results1(my_wb,R0,Tense)
+        my_wb,R0=RD.Results2(my_wb,R0,Sentiment_Score ,'Sentiment')
+        my_wb.save(Text_path[0:-5]+" Results.xlsx")
     #RD.Results(Text_path[0:-5],Sentiment_Score,RepeatWords3,RepeatWords,Tense,Gufim,Conjugation,NWqm,GW,CW)
-        return (Sentiment_Score,CO,COP,GufimWords,TABLE,Tense,GP,GW,GT,Gufim,GufimPrepositions,GufimPast,GufimPresent,GufimFuture)
+        return (Test,CO,COP,GufimPastWords,TABLE,Tense,GT,Gufim,GufimPrepositions,GufimPast,GufimPresent,GufimFuture)
  
